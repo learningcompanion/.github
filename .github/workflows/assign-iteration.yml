@@ -1,0 +1,37 @@
+name: Reusable - Assign closed issue to current iteration
+
+on:
+  workflow_call:
+    inputs:
+      field-name:
+        description: "Name of the Iteration field in the project"
+        required: false
+        type: string
+        default: "Iteration"
+    secrets:
+      PROJECT_TOKEN:
+        description: "PAT with read:project/write:project (org) scope"
+        required: true
+
+jobs:
+  assign-iteration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for script file)
+        uses: actions/checkout@v4
+        with:
+          repository: your-org/.github
+          path: shared
+          sparse-checkout: |
+            scripts/assign-iteration.js
+          sparse-checkout-cone-mode: false
+
+      - name: Set current iteration on Project item(s)
+        uses: actions/github-script@v7
+        env:
+          FIELD_NAME: ${{ inputs.field-name }}
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            const script = require('./shared/scripts/assign-iteration.js')
+            await script({github, context, core})
